@@ -1,6 +1,10 @@
 # rtlib - Utils
 
+from collections.abc import AsyncIterator
+
 from traceback import TracebackException
+
+from aiomysql import Cursor
 
 
 __all__ = ("make_error_message", "code_block")
