@@ -3,7 +3,7 @@
 from typing import TypeVar, Any
 from collections.abc import AsyncIterator
 
-from inspect import iscoroutinefunction, getsource, getfile
+from inspect import iscoroutinefunction, isasyncgenfunction, getsource, getfile
 from warnings import filterwarnings
 from functools import wraps
 
@@ -23,7 +23,8 @@ class DatabaseManager:
 
     def __init_subclass__(cls):
         for key, value in list(cls.__dict__.items()):
-            if iscoroutinefunction(value) and not getattr(value, "__dm_ignore__", False):
+            if ((gen := isasyncgenfunction(value)) or iscoroutinefunction(value)) \
+                    and not getattr(value, "__dm_ignore__", False):
                 # `cursor`の引数を増設する。
                 l = {}
                 source = getsource(value).replace("self",  "self, cursor", 1)
@@ -34,23 +35,36 @@ class DatabaseManager:
                 )))
                 exec(compile(source, getfile(value), "exec"), value.__globals__, l)
                 # 新しい関数を作る。
-                @wraps(l[key])
-                async def _new(
-                    self: DatabaseManager, *args, __dm_func__=l[key], **kwargs
-                ):
-                    if "cursor" in kwargs:
-                        return await __dm_func__(self, kwargs.pop("cursor"), *args, **kwargs)
-                    else:
-                        async with self.pool.acquire() as conn:
-                            async with conn.cursor() as cursor:
-                                return await __dm_func__(self, cursor, *args, **kwargs)
+                if gen:
+                    @wraps(l[key])
+                    async def _new( # type: ignore
+                        self: DatabaseManager, *args, __dm_func__=l[key], **kwargs
+                    ):
+                        if "cursor" in kwargs:
+                            async for data in __dm_func__(self, kwargs.pop("cursor"), *args, **kwargs):
+                                yield data
+                        else:
+                            async with self.pool.acquire() as conn:
+                                async with conn.cursor() as cursor:
+                                    async for data in __dm_func__(self, cursor, *args, **kwargs):
+                                        yield data
+                else:
+                    @wraps(l[key])
+                    async def _new(
+                        self: DatabaseManager, *args, __dm_func__=l[key], **kwargs
+                    ):
+                        if "cursor" in kwargs:
+                            return await __dm_func__(self, kwargs.pop("cursor"), *args, **kwargs)
+                        else:
+                            async with self.pool.acquire() as conn:
+                                async with conn.cursor() as cursor:
+                                        return await __dm_func__(self, cursor, *args, **kwargs)
                 setattr(cls, key, _new)
 
     @staticmethod
     def ignore(func: CaT) -> CaT:
         setattr(func, "__dm_ignore__", True)
         return func
-
 
     @staticmethod
     async def fetchstep(
