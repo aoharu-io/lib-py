@@ -6,7 +6,7 @@ from collections.abc import Callable
 from traceback import TracebackException
 
 
-__all__ = ("make_error_message", "code_block")
+__all__ = ("make_error_message", "code_block", "to_dict_for_dataclass")
 
 
 def make_error_message(error: Exception) -> str:
