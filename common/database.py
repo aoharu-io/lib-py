@@ -1,6 +1,6 @@
 # RT - Data Manager
 
-from typing import TypeVar, Any
+from typing import TYPE_CHECKING, TypeVar, Any
 from collections.abc import AsyncIterator
 
 from inspect import iscoroutinefunction, isasyncgenfunction, getsource, getfile
@@ -78,3 +78,22 @@ class DatabaseManager:
                 for row in rows:
                     yield row
             now += cycle
+
+    async def not_exists_check_for_clean(self, type_: str, data: Any) -> bool:
+        assert hasattr(self, "bot"), "Botが設定されていません。"
+        return getattr(self.bot, f"get_{type_.lower()[:-2]}")(data) is None # type: ignore
+
+    async def clean_data(
+        self, cursor: Cursor, table: str, type_: str, **kwargs
+    ) -> None:
+        targets = []
+        async for row in self.fetchstep(
+            cursor, "SELECT {} FROM {};".format(type_, table), **kwargs
+        ):
+            if self.not_exists_check_for_clean(type_, row[0]):
+                targets.append(row[0])
+        for target in targets:
+            await cursor.execute(
+                "DELETE FROM {} WHERE {} = %s;".format(table, type_),
+                (target,)
+            )
