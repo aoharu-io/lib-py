@@ -1,6 +1,6 @@
 # RT - Data Manager
 
-from typing import TYPE_CHECKING, TypeVar, Any
+from typing import TypeVar, Any
 from collections.abc import AsyncIterator
 
 from inspect import iscoroutinefunction, isasyncgenfunction, getsource, getfile
@@ -8,6 +8,11 @@ from warnings import filterwarnings
 from functools import wraps
 
 from aiomysql import Pool, Cursor
+
+try:
+    from core import tdpocket
+except Exception:
+    ...
 
 
 filterwarnings('ignore', module=r"aiomysql")
@@ -80,8 +85,8 @@ class DatabaseManager:
             now += cycle
 
     async def not_exists_check_for_clean(self, type_: str, data: Any) -> bool:
-        assert hasattr(self, "bot"), "Botが設定されていません。"
-        return getattr(self.bot, f"get_{type_.lower()[:-2]}")(data) is None # type: ignore
+        assert tdpocket.bot is not None, "Botが設定されていません。"
+        return getattr(bot, f"get_{type_.lower()[:-2]}")(data) is None # type: ignore
 
     async def clean_data(
         self, cursor: Cursor, table: str, type_: str, **kwargs
