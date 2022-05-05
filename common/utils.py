@@ -6,12 +6,19 @@ from collections.abc import Callable
 from traceback import TracebackException
 
 
-__all__ = ("make_error_message", "code_block", "to_dict_for_dataclass")
+__all__ = (
+    "make_error_message", "make_simple_error_text", "code_block", "to_dict_for_dataclass"
+)
 
 
 def make_error_message(error: Exception) -> str:
     "渡されたエラーから全文を作ります。"
     return "".join(TracebackException.from_exception(error).format())
+
+
+def make_simple_error_text(error: Exception) -> str:
+    "渡されたエラーから名前とエラー内容の文字列にします。"
+    return f"{error.__class__.__name__}: {error}"
 
 
 def code_block(code: str, type_: str = "") -> str:
