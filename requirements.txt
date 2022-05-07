@@ -1,0 +1,3 @@
+aiomysql
+discord.py
+cryptography
