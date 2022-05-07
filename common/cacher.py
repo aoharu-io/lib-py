@@ -125,6 +125,10 @@ class CacherPool:
         "指定されたCacherを削除します。"
         self.cachers.remove(cacher)
 
+    def close(self) -> None:
+        "CacherPoolのお片付けをします。"
+        self._cache_remover.cancel()
+
     @tasks.loop(seconds=5)
     async def _cache_remover(self):
         now = time()
