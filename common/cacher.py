@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import Generic, TypeVar, Any, Optional
 from collections.abc import Iterator, Callable, Hashable
 
-from time import time
-
-from discord.ext import tasks
+from threading import Thread
+from time import time, sleep
 
 
 __all__ = ("Cache", "Cacher", "CacherPool")
@@ -20,8 +19,12 @@ class Cache(Generic[DataT]):
     def __init__(self, data: DataT, deadline: Optional[float] = None):
         self.data, self.deadline = data, deadline
 
-    def update_deadline(self, seconds: float, now: Optional[float] = None) -> None:
-        "寿命を更新します。"
+    def set_deadline(self, deadline: float) -> None:
+        "寿命を上書きします。"
+        self.deadline = deadline
+
+    def merge_deadline(self, seconds: float, now: Optional[float] = None) -> None:
+        "寿命を更新します。(加算されます。)"
         self.deadline = (now or time()) + seconds
 
     def is_dead(self, time_: Optional[float] = None) -> bool:
@@ -39,9 +42,14 @@ KeyT, ValueT = TypeVar("KeyT", bound=Hashable), TypeVar("ValueT")
 class Cacher(Generic[KeyT, ValueT]):
     "キャッシュを管理するためのクラスです。\n注意：引数`lifetime`を使用する場合は、CacherPoolと兼用しないとデータは自然消滅しません。"
 
-    def __init__(self, lifetime: Optional[float] = None, default: Optional[Callable[[], Any]] = None):
+    def __init__(
+        self, lifetime: Optional[float] = None,
+        default: Optional[Callable[[], Any]] = None,
+        on_dead: Callable[[KeyT, ValueT], Any] = lambda _, __: ...
+    ):
         self.data: dict[KeyT, Cache[ValueT]] = {}
         self.lifetime, self.default = lifetime, default
+        self.on_dead = on_dead
 
         self.pop = self.data.pop
         self.keys = self.data.keys
@@ -60,20 +68,25 @@ class Cacher(Generic[KeyT, ValueT]):
         if self.default is not None and key not in self.data:
             self.set(key, self.default())
 
-    def update_deadline(self, key: KeyT, additional: Optional[float] = None) -> None:
+    def merge_deadline(self, key: KeyT, additional: Optional[float] = None) -> None:
         "指定されたデータの寿命を更新します。"
         if (new := additional or self.lifetime) is not None:
-            self.data[key].update_deadline(new)
+            self.data[key].merge_deadline(new)
+
+    def set_deadline(self, key: KeyT, deadline: float) -> None:
+        "指定されたデータの寿命を上書きします。"
+        self.data[key].set_deadline(deadline)
 
     def __getitem__(self, key: KeyT) -> ValueT:
         self._default(key)
-        self.update_deadline(key)
+        self.merge_deadline(key)
         return self.data[key].data
 
     def __getattr__(self, key: KeyT) -> ValueT:
         return self[key]
 
     def __delitem__(self, key: KeyT) -> None:
+        self.on_dead(key, self.data[key].data)
         del self.data[key]
 
     def __delattr__(self, key: str) -> None:
@@ -106,19 +119,22 @@ class Cacher(Generic[KeyT, ValueT]):
         return str(self)
 
 
-class CacherPool:
+class CacherPool(Thread):
     "Cacherのプールです。"
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.cachers: list[Cacher[Any, Any]] = []
-        self._cache_remover.start()
+        self._close = False
+        kwargs.setdefault("daemon", True)
+        super().__init__(*args, **kwargs)
 
     def acquire(
         self, lifetime: Optional[float] = None,
-        default: Optional[Callable[[], Any]] = None
+        default: Optional[Callable[[], Any]] = None,
+        on_dead: Callable[[Any, Any], Any] = lambda _, __: ...
     ) -> Cacher[Any, Any]:
         "Cacherを生み出します。"
-        self.cachers.append(Cacher(lifetime, default))
+        self.cachers.append(Cacher(lifetime, default, on_dead))
         return self.cachers[-1]
 
     def release(self, cacher: Cacher[Any, Any]) -> None:
@@ -127,16 +143,16 @@ class CacherPool:
 
     def close(self) -> None:
         "CacherPoolのお片付けをします。"
-        self._cache_remover.cancel()
+        self._close = True
+        self.join()
 
-    @tasks.loop(seconds=5)
-    async def _cache_remover(self):
-        now = time()
-        for cacher in self.cachers:
-            for key, value in list(cacher.data.items()):
-                if value.is_dead(now):
-                    del cacher[key]
-
-    def __del__(self):
-        if self._cache_remover.is_running():
-            self._cache_remover.cancel()
+    def run(self):
+        while not self._close:
+            now = time()
+            for cacher in self.cachers:
+                if self._close:
+                    break
+                for key, value in list(cacher.data.items()):
+                    if value.is_dead(now):
+                        del cacher[key]
+            sleep(1)
