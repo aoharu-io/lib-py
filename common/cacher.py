@@ -79,8 +79,9 @@ class Cacher(Generic[KeyT, ValueT]):
 
     def __getitem__(self, key: KeyT) -> ValueT:
         self._default(key)
+        data = self.data[key].data
         self.merge_deadline(key)
-        return self.data[key].data
+        return data
 
     def __getattr__(self, key: KeyT) -> ValueT:
         return self[key]
