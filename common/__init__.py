@@ -2,10 +2,12 @@
 
 import logging
 
+from orjson import dumps as odumps
+
 from . import utils
 
 
-__all__ = ("utils", "set_handler")
+__all__ = ("utils", "set_handler", "dumps")
 
 
 def set_handler(logger: logging.Logger) -> None:
@@ -14,3 +16,7 @@ def set_handler(logger: logging.Logger) -> None:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("[%(name)s] [%(levelname)s] %(message)s"))
     logger.addHandler(handler)
+
+
+dumps = lambda content, *args, **kwargs: odumps(content, *args, **kwargs).decode()
+"`orjson.dumps`を文字列で返すようにしたものです。"
