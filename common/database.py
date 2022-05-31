@@ -86,6 +86,8 @@ class DatabaseManager:
 
     async def not_exists_check_for_clean(self, type_: str, data: Any) -> bool:
         assert tdpocket.bot is not None, "Botが設定されていません。"
+        if type_ == "CategoryId":
+            type_ = "ChannelId"
         return getattr(bot, f"get_{type_.lower()[:-2]}")(data) is None # type: ignore
 
     async def clean_data(
