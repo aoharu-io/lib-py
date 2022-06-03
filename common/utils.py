@@ -36,5 +36,5 @@ to_dict_for_dataclass: Callable[..., dict[str, Any]] = lambda self: {
 def text_format(text: dict[str, str], **kwargs: str) -> dict[str, str]:
     "辞書の全ての値に`.format(**kwargs)`をします。"
     for key in text.keys():
-        text[key].format(**kwargs)
+        text[key] = text[key].format(**kwargs)
     return text
