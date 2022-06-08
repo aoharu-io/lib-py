@@ -1,14 +1,14 @@
 # rtlib - Utils
 
-from typing import Any
-from collections.abc import Callable
+from typing import TypeVar, Any
+from collections.abc import Callable, Iterator, Sized
 
 from traceback import TracebackException
 
 
 __all__ = (
     "make_error_message", "make_simple_error_text", "code_block",
-    "to_dict_for_dataclass", "text_format"
+    "to_dict_for_dataclass", "text_format", "map_length"
 )
 
 
@@ -38,3 +38,9 @@ def text_format(text: dict[str, str], **kwargs: str) -> dict[str, str]:
     for key in text.keys():
         text[key] = text[key].format(**kwargs)
     return text
+
+
+KeyT, ValueT = TypeVar("KeyT"), TypeVar("ValueT", bound=Sized)
+def map_length(data: dict[KeyT, ValueT]) -> Iterator[tuple[tuple[KeyT, ValueT], int]]:
+    "渡された辞書の`.items`で返されるタプルと値の大きさの整数を入れたタプルを返すイテレーターを返します。"
+    return map(lambda key: ((key, data[key]), len(data[key])), data.keys())
