@@ -73,12 +73,12 @@ class DatabaseManager:
 
     @staticmethod
     async def fetchstep(
-        cursor: Cursor, sql: str, cycle: int = 50
-    ) -> AsyncIterator[tuple[Any, ...]]:
+        cursor: Cursor, sql: str, args: tuple | None= None, cycle: int = 50
+    ) -> AsyncIterator[tuple]:
         "少しずつデータベースからデータを読み込みます。(`LIMIT`が使われます。)"
         now, rows = 0, (1,)
         while rows:
-            await cursor.execute(sql.replace(";", f" LIMIT {now}, {cycle};"))
+            await cursor.execute(sql.replace(";", f" LIMIT {now}, {cycle};"), args)
             if rows := await cursor.fetchall():
                 for row in rows:
                     yield row
