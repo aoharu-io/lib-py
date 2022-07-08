@@ -10,9 +10,9 @@ from functools import wraps
 from aiomysql import Pool, Cursor
 
 try:
-    from core import tdpocket
+    from core import tdpocket # type: ignore
 except Exception:
-    ...
+    tdpocket = None
 
 
 filterwarnings('ignore', module=r"aiomysql")
@@ -85,7 +85,7 @@ class DatabaseManager:
             now += cycle
 
     async def not_exists_check_for_clean(self, type_: str, data: Any) -> bool:
-        assert tdpocket.bot is not None, "Botが設定されていません。"
+        assert tdpocket is not None and tdpocket.bot is not None, "Botが設定されていません。"
         if type_ == "CategoryId":
             type_ = "ChannelId"
         return getattr(bot, f"get_{type_.lower()[:-2]}")(data) is None # type: ignore
