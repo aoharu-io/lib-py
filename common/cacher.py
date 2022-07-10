@@ -156,4 +156,4 @@ class CacherPool(Thread):
                 for key, value in list(cacher.data.items()):
                     if value.is_dead(now):
                         del cacher[key]
-            sleep(1)
+            sleep(0.5)
