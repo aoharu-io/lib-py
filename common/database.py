@@ -9,11 +9,6 @@ from functools import wraps
 
 from aiomysql import Pool, Cursor
 
-try:
-    from core import tdpocket # type: ignore
-except Exception:
-    tdpocket = None
-
 
 filterwarnings('ignore', module=r"aiomysql")
 __all__ = ("DatabaseManager", "cursor")
@@ -83,25 +78,3 @@ class DatabaseManager:
                 for row in rows:
                     yield row
             now += cycle
-
-    async def not_exists_check_for_clean(self, type_: str, data: Any) -> bool:
-        assert tdpocket is not None and tdpocket.bot is not None, "Botが設定されていません。"
-        if type_ == "CategoryId":
-            type_ = "ChannelId"
-        return (getattr(tdpocker.bot, f"get_{type_.lower()[:-2]}") # type: ignore 
-            (data, force=True) is None)
-
-    async def clean_data(
-        self, cursor: Cursor, table: str, type_: str, **kwargs
-    ) -> None:
-        targets = []
-        async for row in self.fetchstep(
-            cursor, "SELECT {} FROM {};".format(type_, table), **kwargs
-        ):
-            if await self.not_exists_check_for_clean(type_, row[0]):
-                targets.append(row[0])
-        for target in targets:
-            await cursor.execute(
-                "DELETE FROM {} WHERE {} = %s;".format(table, type_),
-                (target,)
-            )
