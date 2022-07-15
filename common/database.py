@@ -98,7 +98,7 @@ class DatabaseManager:
         async for row in self.fetchstep(
             cursor, "SELECT {} FROM {};".format(type_, table), **kwargs
         ):
-            if self.not_exists_check_for_clean(type_, row[0]):
+            if await self.not_exists_check_for_clean(type_, row[0]):
                 targets.append(row[0])
         for target in targets:
             await cursor.execute(
