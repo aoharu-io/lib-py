@@ -88,7 +88,8 @@ class DatabaseManager:
         assert tdpocket is not None and tdpocket.bot is not None, "Botが設定されていません。"
         if type_ == "CategoryId":
             type_ = "ChannelId"
-        return getattr(bot, f"get_{type_.lower()[:-2]}")(data) is None # type: ignore
+        return (getattr(tdpocker.bot, f"get_{type_.lower()[:-2]}") # type: ignore 
+            (data, force=True) is None)
 
     async def clean_data(
         self, cursor: Cursor, table: str, type_: str, **kwargs
