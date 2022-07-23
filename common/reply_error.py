@@ -18,7 +18,8 @@ class ReplyError(Exception):
         self.text = text
         if status is not None:
             self.status = status
-        super().__init__(self.text, *args, **kwargs)
+        self.kwargs = kwargs
+        super().__init__(self.text, *args)
 
 
 class BadRequest(ReplyError):

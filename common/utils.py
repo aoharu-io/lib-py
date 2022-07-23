@@ -8,7 +8,7 @@ from traceback import TracebackException
 
 __all__ = (
     "make_error_message", "make_simple_error_text", "code_block",
-    "to_dict_for_dataclass", "text_format", "map_length"
+    "to_dict_for_dataclass", "format_text", "map_length"
 )
 
 
@@ -33,7 +33,7 @@ to_dict_for_dataclass: Callable[..., dict[str, Any]] = lambda self: {
 "データクラスのデータを辞書として出力する`to_dict`を作成します。"
 
 
-def text_format(text: dict[str, str], **kwargs: str) -> dict[str, str]:
+def format_text(text: dict[str, str], **kwargs: str) -> dict[str, str]:
     "辞書の全ての値に`.format(**kwargs)`をします。"
     for key in text.keys():
         text[key] = text[key].format(**kwargs)
