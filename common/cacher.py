@@ -45,11 +45,12 @@ class Cacher(Generic[KeyT, ValueT]):
     def __init__(
         self, lifetime: Optional[float] = None,
         default: Optional[Callable[[], Any]] = None,
-        on_dead: Callable[[KeyT, ValueT], Any] = lambda _, __: ...
+        on_dead: Callable[[KeyT, ValueT], Any] = lambda _, __: ...,
+        auto_update_deadline: bool = True
     ):
         self.data: dict[KeyT, Cache[ValueT]] = {}
         self.lifetime, self.default = lifetime, default
-        self.on_dead = on_dead
+        self.on_dead, self.auto_update_deadline = on_dead, auto_update_deadline
 
         self.pop = self.data.pop
         self.keys = self.data.keys
@@ -80,7 +81,8 @@ class Cacher(Generic[KeyT, ValueT]):
     def __getitem__(self, key: KeyT) -> ValueT:
         self._default(key)
         data = self.data[key].data
-        self.merge_deadline(key)
+        if self.auto_update_deadline:
+            self.merge_deadline(key)
         return data
 
     def __getattr__(self, key: KeyT) -> ValueT:
@@ -131,11 +133,10 @@ class CacherPool(Thread):
 
     def acquire(
         self, lifetime: Optional[float] = None,
-        default: Optional[Callable[[], Any]] = None,
-        on_dead: Callable[[Any, Any], Any] = lambda _, __: ...
+        *args: Any, **kwargs: Any
     ) -> Cacher[Any, Any]:
         "Cacherを生み出します。"
-        self.cachers.append(Cacher(lifetime, default, on_dead))
+        self.cachers.append(Cacher(lifetime, *args, **kwargs))
         return self.cachers[-1]
 
     def release(self, cacher: Cacher[Any, Any]) -> None:
