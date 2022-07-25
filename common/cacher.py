@@ -23,7 +23,7 @@ class Cache(Generic[DataT]):
         "寿命を上書きします。"
         self.deadline = deadline
 
-    def merge_deadline(self, seconds: float, now: Optional[float] = None) -> None:
+    def update_deadline(self, seconds: float, now: Optional[float] = None) -> None:
         "寿命を更新します。(加算されます。)"
         self.deadline = (now or time()) + seconds
 
@@ -69,10 +69,10 @@ class Cacher(Generic[KeyT, ValueT]):
         if self.default is not None and key not in self.data:
             self.set(key, self.default())
 
-    def merge_deadline(self, key: KeyT, additional: Optional[float] = None) -> None:
+    def update_deadline(self, key: KeyT, additional: Optional[float] = None) -> None:
         "指定されたデータの寿命を更新します。"
         if (new := additional or self.lifetime) is not None:
-            self.data[key].merge_deadline(new)
+            self.data[key].update_deadline(new)
 
     def set_deadline(self, key: KeyT, deadline: float) -> None:
         "指定されたデータの寿命を上書きします。"
@@ -82,7 +82,7 @@ class Cacher(Generic[KeyT, ValueT]):
         self._default(key)
         data = self.data[key].data
         if self.auto_update_deadline:
-            self.merge_deadline(key)
+            self.update_deadline(key)
         return data
 
     def __getattr__(self, key: KeyT) -> ValueT:
