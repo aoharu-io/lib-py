@@ -55,6 +55,12 @@ class Cacher(Generic[KeyT, ValueT]):
         self.pop = self.data.pop
         self.keys = self.data.keys
 
+    def clear(self) -> None:
+        "空にします。"
+        for key in set(self.data.keys()):
+            self.on_dead(key, self.data[key].data)
+            del self.data[key]
+
     def set(self, key: KeyT, data: ValueT, lifetime: Optional[float] = None) -> None:
         "値を設定します。\n別のライフタイムを指定することができます。"
         self.data[key] = Cache(
