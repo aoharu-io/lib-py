@@ -7,6 +7,9 @@ from os import mkdir
 from os.path import exists
 
 
+__all__ = ("set_stream_handler", "set_handler", "set_output_handler")
+
+
 BASE_FORMAT = "[%(name)s] [%(levelname)s] %(message)s"
 NORMAL_FORMATTER = logging.Formatter(BASE_FORMAT)
 EXTENDED_FORMATTER = logging.Formatter(f"[%(asctime)s] {BASE_FORMAT}", "%Y-%m-%d %H:%M:%S")
@@ -30,11 +33,16 @@ def set_output_handler(logger: logging.Logger) -> None:
     logger.addHandler(handler)
 
 
-def set_handler(logger: logging.Logger, output_file: bool = True) -> None:
-    "渡された`Logger`でログを標準出力に出力するようにします。オプションでファイル出力します。"
+def set_stream_handler(logger: logging.Logger) -> None:
+    "渡されたロガーのログを標準出力に出力するようにします。"
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     handler.setFormatter(NORMAL_FORMATTER)
     logger.addHandler(handler)
+
+
+def set_handler(logger: logging.Logger, output_file: bool = True) -> None:
+    "渡された`Logger`でログを標準出力に出力するようにします。オプションでファイル出力します。"
+    set_stream_handler(logger)
     if output_file:
         set_output_handler(logger)
