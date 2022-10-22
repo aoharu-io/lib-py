@@ -58,7 +58,7 @@ class DatabaseManager:
                         else:
                             async with self.pool.acquire() as conn:
                                 async with conn.cursor() as cursor:
-                                        return await __dm_func__(self, cursor, *args, **kwargs)
+                                    return await __dm_func__(self, cursor, *args, **kwargs)
                 setattr(cls, key, _new)
 
     @staticmethod
