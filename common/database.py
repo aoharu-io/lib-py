@@ -1,6 +1,6 @@
 # rextlib - Data Manager
 
-from typing import TypeVar, Any
+from typing import TypeVar
 from collections.abc import AsyncIterator
 
 from inspect import iscoroutinefunction, isasyncgenfunction, getsource, getfile
