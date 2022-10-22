@@ -1,4 +1,4 @@
-# rtlib - Main
+# rextlib - Main
 
 from . import utils
 

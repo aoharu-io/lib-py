@@ -1,4 +1,4 @@
-# RT Lib - JSON
+# rextlib - JSON
 
 from orjson import dumps as odumps, loads
 

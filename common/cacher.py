@@ -1,4 +1,4 @@
-# RT - Cacher, キャッシュ管理
+# rextlib - Cacher, キャッシュ管理
 
 from __future__ import annotations
 

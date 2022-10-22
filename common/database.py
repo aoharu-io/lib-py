@@ -1,4 +1,4 @@
-# RT - Data Manager
+# rextlib - Data Manager
 
 from typing import TypeVar, Any
 from collections.abc import AsyncIterator

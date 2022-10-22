@@ -1,4 +1,4 @@
-# rtlib - Utils
+# rextlib - Utils
 
 from typing import TypeVar, Any
 from collections.abc import Callable, Iterator, Sized

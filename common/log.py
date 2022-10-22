@@ -1,4 +1,4 @@
-# rtlib - Log
+# rextlib - Log
 
 from logging.handlers import RotatingFileHandler
 import logging
