@@ -15,15 +15,32 @@ from .config import Databases as DatabasesConfig
 
 
 filterwarnings('ignore', module=r"aiomysql")
-__all__ = ("DatabaseManager", "cursor", "DatabasePools")
+__all__ = ("DatabaseManager", "cursor", "fetchstep", "DatabasePools")
 cursor: Cursor
 cursor = None # type: ignore
 
 
+async def fetchstep(
+    cursor: Cursor, sql: str,
+    args: tuple | None = None,
+    cycle: int = 50
+) -> AsyncIterator[tuple]:
+    "少しずつデータベースからデータを読み込みます。(`LIMIT`が使われます。)"
+    now, rows = 0, (1,)
+    while rows:
+        await cursor.execute(sql.replace(";", f" LIMIT {now}, {cycle};"), args)
+        if rows := await cursor.fetchall():
+            for row in rows:
+                yield row
+        now += cycle
+
+
 CaT = TypeVar("CaT")
 class DatabaseManager:
+    "データベースを簡単に処理するためのクラスです。"
 
     pool: Pool
+    fetchstep = staticmethod(fetchstep)
 
     def __init_subclass__(cls):
         for key, value in list(cls.__dict__.items()):
@@ -69,19 +86,6 @@ class DatabaseManager:
     def ignore(func: CaT) -> CaT:
         setattr(func, "__dm_ignore__", True)
         return func
-
-    @staticmethod
-    async def fetchstep(
-        cursor: Cursor, sql: str, args: tuple | None= None, cycle: int = 50
-    ) -> AsyncIterator[tuple]:
-        "少しずつデータベースからデータを読み込みます。(`LIMIT`が使われます。)"
-        now, rows = 0, (1,)
-        while rows:
-            await cursor.execute(sql.replace(";", f" LIMIT {now}, {cycle};"), args)
-            if rows := await cursor.fetchall():
-                for row in rows:
-                    yield row
-            now += cycle
 
 
 @dataclass
