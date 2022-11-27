@@ -22,7 +22,7 @@ def set_output_handler(logger: logging.Logger) -> None:
     more = ""
     if exists("core/bot.py"):
         # もしBotによるログ出力ならシャードIDを出力先ファイルの名前に入れる。
-        from core.tdpocket import bot # type: ignore
+        from app.tdpocket import bot # type: ignore
         assert bot is not None
         more = bot.rtws.id_
     handler = RotatingFileHandler(
