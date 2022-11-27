@@ -1,17 +1,21 @@
 # rextlib - Data Manager
 
-from typing import TypeVar
+from typing import TypeVar, Self
 from collections.abc import AsyncIterator
 
 from inspect import iscoroutinefunction, isasyncgenfunction, getsource, getfile
+
 from warnings import filterwarnings
+from dataclasses import dataclass
 from functools import wraps
 
-from aiomysql import Pool, Cursor
+from aiomysql import Pool, Cursor, create_pool
+
+from .config import Databases as DatabasesConfig
 
 
 filterwarnings('ignore', module=r"aiomysql")
-__all__ = ("DatabaseManager", "cursor")
+__all__ = ("DatabaseManager", "cursor", "DatabasePools")
 cursor: Cursor
 cursor = None # type: ignore
 
@@ -78,3 +82,20 @@ class DatabaseManager:
                 for row in rows:
                     yield row
             now += cycle
+
+
+@dataclass
+class DatabasePools:
+    "データベースのプールを格納するためのクラスです。"
+
+    write: Pool
+    read: Pool
+
+    @classmethod
+    async def from_config(cls, config: DatabasesConfig) -> Self:
+        "データベースの設定からこのクラスのインスタンスを作ります。"
+        self = cls(None, None) # type: ignore
+        self.write = await create_pool(**config["write"])
+        self.read = await create_pool(**config["read"]) \
+            if "read" in config else self.write
+        return self
