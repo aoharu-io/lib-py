@@ -90,12 +90,21 @@ class DatabasePools:
 
     write: Pool
     read: Pool
+    _read_is_write = False
 
     @classmethod
     async def from_config(cls, config: DatabasesConfig) -> Self:
         "データベースの設定からこのクラスのインスタンスを作ります。"
         self = cls(None, None) # type: ignore
         self.write = await create_pool(**config["write"])
-        self.read = await create_pool(**config["read"]) \
-            if "read" in config else self.write
+        self._read_is_write = "read" in config
+        self.read = await create_pool(
+            **config["read"] # type: ignore
+        ) if self._read_is_write else self.write
         return self
+
+    async def close(self) -> None:
+        "プールを閉じます。"
+        self.write.close()
+        if not self._read_is_write:
+            self.read.close()
