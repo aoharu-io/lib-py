@@ -107,7 +107,7 @@ class DatabasePools:
         ) if self._read_is_write else self.write
         return self
 
-    async def close(self) -> None:
+    def close(self) -> None:
         "プールを閉じます。"
         self.write.close()
         if not self._read_is_write:
