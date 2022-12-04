@@ -52,7 +52,8 @@ class Cacher(Generic[KeyT, ValueT]):
         self.lifetime, self.default = lifetime, default
         self.on_dead, self.auto_update_deadline = on_dead, auto_update_deadline
 
-        self.pop = self.data.pop
+        self.pop = lambda key, *args: (data := self.data.pop(key, *args).data) \
+            and self.on_dead(key, data) and data
         self.keys = self.data.keys
 
     def clear(self) -> None:
