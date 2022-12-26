@@ -12,12 +12,12 @@ __all__ = (
 )
 
 
-def make_error_message(error: Exception) -> str:
+def make_error_message(error: BaseException) -> str:
     "渡されたエラーから全文を作ります。"
     return "".join(TracebackException.from_exception(error).format())
 
 
-def make_simple_error_text(error: Exception) -> str:
+def make_simple_error_text(error: BaseException) -> str:
     "渡されたエラーから名前とエラー内容の文字列にします。"
     return f"{error.__class__.__name__}: {error}"
 
