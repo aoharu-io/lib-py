@@ -36,6 +36,11 @@ class Executors:
             for i, prefix in ((4, "RT.NormalExecutor"), (2, "RT.CleanExecutor"))
         ))
 
+    def close(self) -> None:
+        "Executorを閉じます。"
+        self.normal.shutdown(False, cancel_futures=True)
+        self.clean.shutdown(True)
+
 
 def make_error_message(error: BaseException) -> str:
     "渡されたエラーから全文を作ります。"
