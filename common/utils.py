@@ -101,6 +101,6 @@ def take_performance_statistics(
             memory.free,
             memory.total
         ),
-        task_amount=len(all_tasks(loop)),
+        task_amount=0 if loop is None else len(all_tasks(loop)),
         database_pool_size=database_pool_size
     )
