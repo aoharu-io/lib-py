@@ -89,7 +89,7 @@ class PerformanceStatistics(TypedDict):
     "データベースの接続の数。それぞれ読み込みと書き込み用。"
 
 def take_performance_statistics(
-    loop: AbstractEventLoop,
+    loop: AbstractEventLoop | None,
     database_pool_size: tuple[int, int]
 ) -> PerformanceStatistics:
     "現在の動作状況をまとめた辞書を返します。"
