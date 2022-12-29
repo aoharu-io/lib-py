@@ -4,6 +4,7 @@ from typing import TypeVar, TypedDict, Any
 from collections.abc import Callable, Iterator, Sized
 
 from traceback import TracebackException
+from asyncio import AbstractEventLoop, all_tasks
 
 from psutil import cpu_percent, virtual_memory
 
@@ -56,9 +57,16 @@ class PerformanceStatistics(TypedDict):
     "CPU使用率"
     memory: tuple[float, float, float]
     "メモリ使用量と未使用量、そして合計の三つが格納されたタプル"
+    task_amount: int
+    "非同期イベントループのタスクの数です。"
+    database_pool_size: tuple[int, int]
+    "データベースの接続の数。それぞれ読み込みと書き込み用。"
 
-def take_performance_statistics() -> PerformanceStatistics:
-    "現在のサーバーの動作状況をまとめた辞書を返します。"
+def take_performance_statistics(
+    loop: AbstractEventLoop,
+    database_pool_size: tuple[int, int]
+) -> PerformanceStatistics:
+    "現在の動作状況をまとめた辞書を返します。"
     memory = virtual_memory()
     return PerformanceStatistics(
         cpu=cpu_percent(interval=1),
@@ -66,5 +74,7 @@ def take_performance_statistics() -> PerformanceStatistics:
             memory.used,
             memory.free,
             memory.total
-        )
+        ),
+        task_amount=len(all_tasks(loop)),
+        database_pool_size=database_pool_size
     )
