@@ -1,9 +1,12 @@
 # rextlib - Utils
 
-from typing import TypeVar, TypedDict, Any
+from typing import Self, TypeVar, TypedDict, Any
 from collections.abc import Callable, Iterator, Sized
 
 from traceback import TracebackException
+from dataclasses import dataclass
+
+from concurrent.futures import ThreadPoolExecutor
 from asyncio import AbstractEventLoop, all_tasks
 
 from psutil import cpu_percent, virtual_memory
@@ -14,6 +17,24 @@ __all__ = (
     "to_dict_for_dataclass", "format_text", "map_length",
     "PerformanceStatistics", "take_performance_statistics"
 )
+
+
+@dataclass
+class Executors:
+    "時間のかかるブロッキングする処理を別スレッドで簡単に行うのに使うExecutorを格納するためのクラスです。"
+
+    normal: ThreadPoolExecutor
+    "通常の処理を回す際はこちらを使用してください。Botのclose時にはfutureはキャンセルされます。"
+    clean: ThreadPoolExecutor
+    "お片付け系の実行しないということがない方が良いような処理はこちらでやってください。"
+
+    @classmethod
+    def default(cls) -> Self:
+        "このクラスのインスタンスを作ります。"
+        return cls(*(
+            ThreadPoolExecutor(i, thread_name_prefix=prefix)
+            for i, prefix in ((4, "RT.NormalExecutor"), (2, "RT.CleanExecutor"))
+        ))
 
 
 def make_error_message(error: BaseException) -> str:
