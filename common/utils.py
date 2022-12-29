@@ -1,14 +1,17 @@
 # rextlib - Utils
 
-from typing import TypeVar, Any
+from typing import TypeVar, TypedDict, Any
 from collections.abc import Callable, Iterator, Sized
 
 from traceback import TracebackException
 
+from psutil import cpu_percent, virtual_memory
+
 
 __all__ = (
     "make_error_message", "make_simple_error_text", "code_block",
-    "to_dict_for_dataclass", "format_text", "map_length"
+    "to_dict_for_dataclass", "format_text", "map_length",
+    "PerformanceStatistics", "take_performance_statistics"
 )
 
 
@@ -44,3 +47,24 @@ KeyT, ValueT = TypeVar("KeyT"), TypeVar("ValueT", bound=Sized)
 def map_length(data: dict[KeyT, ValueT]) -> Iterator[tuple[tuple[KeyT, ValueT], int]]:
     "渡された辞書の`.items`で返されるタプルと値の大きさの整数を入れたタプルを返すイテレーターを返します。"
     return map(lambda key: ((key, data[key]), len(data[key])), data.keys())
+
+
+class PerformanceStatistics(TypedDict):
+    "サーバーの動作状況をまとめた辞書の型です。"
+
+    cpu: float
+    "CPU使用率"
+    memory: tuple[float, float, float]
+    "メモリ使用量と未使用量、そして合計の三つが格納されたタプル"
+
+def take_performance_statistics() -> PerformanceStatistics:
+    "現在のサーバーの動作状況をまとめた辞書を返します。"
+    memory = virtual_memory()
+    return PerformanceStatistics(
+        cpu=cpu_percent(interval=1),
+        memory=(
+            memory.used,
+            memory.free,
+            memory.total
+        )
+    )
