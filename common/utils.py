@@ -85,12 +85,12 @@ class PerformanceStatistics(TypedDict):
     "メモリ使用量と未使用量、そして合計の三つが格納されたタプル"
     task_amount: int
     "非同期イベントループのタスクの数です。"
-    database_pool_size: tuple[int, int]
-    "データベースの接続の数。それぞれ読み込みと書き込み用。"
+    database_pool_size: int
+    "データベースの接続の数。"
 
 def take_performance_statistics(
     loop: AbstractEventLoop | None,
-    database_pool_size: tuple[int, int]
+    database_pool_size: int
 ) -> PerformanceStatistics:
     "現在の動作状況をまとめた辞書を返します。"
     memory = virtual_memory()

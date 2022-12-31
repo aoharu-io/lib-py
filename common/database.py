@@ -42,7 +42,7 @@ class DatabaseManager:
     pool: Pool
     fetchstep = staticmethod(fetchstep)
 
-    def __init_subclass__(cls):
+    def __init_subclass__(cls) -> None:
         for key, value in list(cls.__dict__.items()):
             if ((gen := isasyncgenfunction(value)) or iscoroutinefunction(value)) \
                     and not getattr(value, "__dm_ignore__", False):
