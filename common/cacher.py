@@ -6,6 +6,8 @@ from typing import Generic, TypeVar, Any, overload
 from collections.abc import Iterator, Callable, Hashable
 
 from threading import Thread
+from asyncio import Event
+
 from time import time, sleep
 
 
@@ -55,6 +57,7 @@ class Cacher(Generic[KeyT, ValueT]):
         self.lifetime, self.default = lifetime, default
         self.on_dead = on_dead or self.default_on_dead
         self.auto_update_deadline = auto_update_deadline
+        self.cleaned = Event()
 
         self.keys = self.data.keys
 
@@ -193,4 +196,6 @@ class CacherPool(Thread):
                 for key, value in list(cacher.data.items()):
                     if value.is_dead(now):
                         del cacher[key]
+                cacher.cleaned.set()
+                cacher.cleaned.clear()
             sleep(0.5)
