@@ -40,21 +40,29 @@ class Cache(Generic[DataT]):
 
 KeyT, ValueT = TypeVar("KeyT", bound=Hashable), TypeVar("ValueT")
 class Cacher(Generic[KeyT, ValueT]):
-    "キャッシュを管理するためのクラスです。\n注意：引数`lifetime`を使用する場合は、CacherPoolと兼用しないとデータは自然消滅しません。"
+    """キャッシュを管理するためのクラスです。
+    注意：引数`lifetime`を使用する場合は、CacherPoolと兼用しないとデータは自然消滅しません。
+    `on_dead`はデフォルトではデータを消す関数が設定されます。"""
 
     def __init__(
         self, lifetime: Optional[float] = None,
-        default: Optional[Callable[[], Any]] = None,
-        on_dead: Callable[[KeyT, ValueT], Any] = lambda _, __: ...,
+        default: Callable[[], Any] | None = None,
+        on_dead: Callable[[KeyT, ValueT], Any] | None = None,
         auto_update_deadline: bool = True
     ):
         self.data: dict[KeyT, Cache[ValueT]] = {}
         self.lifetime, self.default = lifetime, default
-        self.on_dead, self.auto_update_deadline = on_dead, auto_update_deadline
+        self.on_dead = on_dead or self.default_on_dead
+        self.auto_update_deadline = auto_update_deadline
 
         self.pop = lambda key, *args: (data := self.data.pop(key, *args).data) \
             and self.on_dead(key, data) and data
         self.keys = self.data.keys
+
+    def default_on_dead(self, key: KeyT, _) -> None:
+        """コンストラクタの引数`on_dead`のデフォルトの実装です。
+        データを消します。"""
+        del self.data[key]
 
     def clear(self) -> None:
         "空にします。"
@@ -97,7 +105,6 @@ class Cacher(Generic[KeyT, ValueT]):
 
     def __delitem__(self, key: KeyT) -> None:
         self.on_dead(key, self.data[key].data)
-        del self.data[key]
 
     def __delattr__(self, key: str) -> None:
         del self[key] # type: ignore
