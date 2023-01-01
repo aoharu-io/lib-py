@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar, Any, Optional
+from typing import Generic, TypeVar, Any, overload
 from collections.abc import Iterator, Callable, Hashable
 
 from threading import Thread
@@ -16,18 +16,18 @@ DataT = TypeVar("DataT")
 class Cache(Generic[DataT]):
     "キャッシュのデータを格納するためのクラスです。"
 
-    def __init__(self, data: DataT, deadline: Optional[float] = None):
+    def __init__(self, data: DataT, deadline: float | None = None):
         self.data, self.deadline = data, deadline
 
     def set_deadline(self, deadline: float) -> None:
         "寿命を上書きします。"
         self.deadline = deadline
 
-    def update_deadline(self, seconds: float, now: Optional[float] = None) -> None:
+    def update_deadline(self, seconds: float, now: float | None = None) -> None:
         "寿命を更新します。(加算されます。)"
         self.deadline = (now or time()) + seconds
 
-    def is_dead(self, time_: Optional[float] = None) -> bool:
+    def is_dead(self, time_: float | None = None) -> bool:
         "死んだキャッシュかどうかをチェックします。"
         return self.deadline is None or (time_ or time()) > self.deadline
 
@@ -39,13 +39,14 @@ class Cache(Generic[DataT]):
 
 
 KeyT, ValueT = TypeVar("KeyT", bound=Hashable), TypeVar("ValueT")
+PopT, Undefined = TypeVar("PopT"), type("Undefined", (), {})
 class Cacher(Generic[KeyT, ValueT]):
     """キャッシュを管理するためのクラスです。
     注意：引数`lifetime`を使用する場合は、CacherPoolと兼用しないとデータは自然消滅しません。
     `on_dead`はデフォルトではデータを消す関数が設定されます。"""
 
     def __init__(
-        self, lifetime: Optional[float] = None,
+        self, lifetime: float | None = None,
         default: Callable[[], Any] | None = None,
         on_dead: Callable[[KeyT, ValueT], Any] | None = None,
         auto_update_deadline: bool = True
@@ -55,9 +56,31 @@ class Cacher(Generic[KeyT, ValueT]):
         self.on_dead = on_dead or self.default_on_dead
         self.auto_update_deadline = auto_update_deadline
 
-        self.pop = lambda key, *args: (data := self.data.pop(key, *args).data) \
-            and self.on_dead(key, data) and data
         self.keys = self.data.keys
+
+    @overload
+    def pop(
+        self, key: KeyT, default: PopT = ...
+    ) -> ValueT | PopT: ...
+    @overload
+    def pop(
+        self, key: KeyT, default: type[Undefined] = Undefined
+    ) -> ValueT: ...
+    def pop(
+        self, key: KeyT, default:
+            PopT | type[Undefined]
+                = Undefined
+    ) -> ValueT | PopT:
+        "値を消して取り出します。defaultが指定されている場合は、それが返されます。"
+        try:
+            data = self[key]
+        except KeyError:
+            if default == Undefined:
+                raise KeyError(key)
+            data = default
+        else:
+            self.on_dead(key, data)
+        return data # type: ignore
 
     def default_on_dead(self, key: KeyT, _) -> None:
         """コンストラクタの引数`on_dead`のデフォルトの実装です。
@@ -68,9 +91,8 @@ class Cacher(Generic[KeyT, ValueT]):
         "空にします。"
         for key in set(self.data.keys()):
             self.on_dead(key, self.data[key].data)
-            del self.data[key]
 
-    def set(self, key: KeyT, data: ValueT, lifetime: Optional[float] = None) -> None:
+    def set(self, key: KeyT, data: ValueT, lifetime: float | None = None) -> None:
         "値を設定します。\n別のライフタイムを指定することができます。"
         self.data[key] = Cache(
             data, None if self.lifetime is None and lifetime is None
@@ -84,7 +106,7 @@ class Cacher(Generic[KeyT, ValueT]):
         if self.default is not None and key not in self.data:
             self.set(key, self.default())
 
-    def update_deadline(self, key: KeyT, additional: Optional[float] = None) -> None:
+    def update_deadline(self, key: KeyT, additional: float | None = None) -> None:
         "指定されたデータの寿命を更新します。"
         if (new := additional or self.lifetime) is not None:
             self.data[key].update_deadline(new)
@@ -146,7 +168,7 @@ class CacherPool(Thread):
         super().__init__(*args, **kwargs)
 
     def acquire(
-        self, lifetime: Optional[float] = None,
+        self, lifetime: float | None = None,
         *args: Any, **kwargs: Any
     ) -> Cacher[Any, Any]:
         "Cacherを生み出します。"
