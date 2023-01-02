@@ -1,3 +1,5 @@
 aiomysql
 cryptography
 orjson
+aiofiles
+psutil
