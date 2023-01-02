@@ -8,10 +8,30 @@ from collections.abc import Iterator, Callable, Hashable
 from threading import Thread
 from asyncio import Event
 
+from dataclasses import dataclass
+
 from time import time, sleep
 
 
 __all__ = ("Cache", "Cacher", "CacherPool")
+
+
+@dataclass
+class CountableEvent(Event):
+    "回数を数えて何回目で`set`するみたいなことができる`.Event`です。"
+
+    first_count: int
+    count_to_set: int
+
+    def __post_init__(self) -> None:
+        self.count = self.first_count
+        super().__init__()
+
+    def set(self) -> None:
+        self.count += 1
+        if self.count == self.count_to_set:
+            self.count = self.first_count
+            super().set()
 
 
 DataT = TypeVar("DataT")
@@ -57,7 +77,7 @@ class Cacher(Generic[KeyT, ValueT]):
         self.lifetime, self.default = lifetime, default
         self.on_dead = on_dead or self.default_on_dead
         self.auto_update_deadline = auto_update_deadline
-        self.cleaned = Event()
+        self.cleaned = CountableEvent(0, 2)
 
         self.keys = self.data.keys
 
