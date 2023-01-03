@@ -79,7 +79,7 @@ class Cacher(Generic[KeyT, ValueT]):
         self.auto_update_deadline = auto_update_deadline
         self.cleaned = CountableEvent(0, 2)
 
-        self.keys = self.data.keys
+        self.keys = lambda: self.data.keys()
 
     @overload
     def pop(
