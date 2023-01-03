@@ -39,7 +39,7 @@ CaT = TypeVar("CaT")
 class DatabaseManager:
     "データベースを簡単に処理するためのクラスです。"
 
-    pool: Pool
+    db: Pool
     fetchstep = staticmethod(fetchstep)
 
     def __init_subclass__(cls) -> None:
@@ -65,7 +65,7 @@ class DatabaseManager:
                             async for data in __dm_func__(self, kwargs.pop("cursor"), *args, **kwargs):
                                 yield data
                         else:
-                            async with self.pool.acquire() as conn:
+                            async with self.db.acquire() as conn:
                                 async with conn.cursor() as cursor:
                                     async for data in __dm_func__(self, cursor, *args, **kwargs):
                                         yield data
@@ -77,7 +77,7 @@ class DatabaseManager:
                         if "cursor" in kwargs:
                             return await __dm_func__(self, kwargs.pop("cursor"), *args, **kwargs)
                         else:
-                            async with self.pool.acquire() as conn:
+                            async with self.db.acquire() as conn:
                                 async with conn.cursor() as cursor:
                                     return await __dm_func__(self, cursor, *args, **kwargs)
                 setattr(cls, key, _new)
