@@ -1,7 +1,7 @@
 # rextlib - Utils
 
 from typing import Self, TypeVar, TypedDict, Any
-from collections.abc import Callable, Iterator, Sized
+from collections.abc import Iterator, Iterable, Sized
 
 from traceback import TracebackException
 from dataclasses import dataclass
@@ -13,10 +13,17 @@ from psutil import cpu_percent, virtual_memory
 
 
 __all__ = (
-    "make_error_message", "make_simple_error_text", "code_block",
-    "to_dict_for_dataclass", "format_text", "map_length",
-    "PerformanceStatistics", "take_performance_statistics"
+    "make_error_message", "make_simple_error_text", "code_block", "format_text",
+    "map_length", "PerformanceStatistics", "take_performance_statistics",
+    "make_self_from_row"
 )
+
+
+MsfrT = TypeVar("MsfrT")
+def make_self_from_row(dataclass: type[MsfrT], row: Iterable[Any]) -> MsfrT:
+    """dataclassによるデータクラスのインスタンスを作成します。データベースの列を渡すことを想定しています。
+    `dataclass`はその列の型と同じ順番でアノテーションが設定されている必要があります。"""
+    return dataclass(**{key: arg for key, arg in zip(dataclass.__annotations__.keys(), row)})
 
 
 @dataclass
@@ -55,12 +62,6 @@ def make_simple_error_text(error: BaseException) -> str:
 def code_block(code: str, type_: str = "") -> str:
     "渡された文字列をコードブロックで囲みます。"
     return f"```{type_}\n{code}\n```"
-
-
-to_dict_for_dataclass: Callable[..., dict[str, Any]] = lambda self: {
-    key: getattr(self, key) for key in self.__class__.__annotations__.keys()
-}
-"データクラスのデータを辞書として出力する`to_dict`を作成します。"
 
 
 def format_text(text: dict[str, str], **kwargs: str) -> dict[str, str]:
