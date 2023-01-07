@@ -4,7 +4,9 @@ from typing import Self, TypeVar, TypedDict, Any
 from collections.abc import Iterator, Iterable, Sized
 
 from traceback import TracebackException
+
 from dataclasses import dataclass
+from re import sub
 
 from concurrent.futures import ThreadPoolExecutor
 from asyncio import AbstractEventLoop, all_tasks
@@ -15,7 +17,7 @@ from psutil import cpu_percent, virtual_memory
 __all__ = (
     "make_error_message", "make_simple_error_text", "code_block", "format_text",
     "map_length", "PerformanceStatistics", "take_performance_statistics",
-    "make_self_from_row"
+    "make_self_from_row", "camel_to_snake_case", "dict_camel_to_snake_case"
 )
 
 
@@ -105,3 +107,23 @@ def take_performance_statistics(
         task_amount=0 if loop is None else len(all_tasks(loop)),
         database_pool_size=database_pool_size
     )
+
+
+def camel_to_snake_case(key: str, support_upper_camel_case: bool = True) -> str:
+    "キャメルケースをスネークケースにします。"
+    value = sub("([A-Z])", lambda s: "_%s" % s.group(1).lower(), key)
+    if support_upper_camel_case and value and value[0] == "_":
+        value = value[1:]
+    return value
+
+
+DcscT = TypeVar("DcscT")
+def dict_camel_to_snake_case(
+    data: dict[str, DcscT],
+    *args: Any, **kwargs: Any
+) -> dict[str, DcscT]:
+    "渡された辞書のキーをキャメルケースからスネークケースにします。"
+    return {
+        camel_to_snake_case(key, *args, **kwargs): value
+        for key, value in data.items()
+    }
