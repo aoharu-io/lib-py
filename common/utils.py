@@ -1,11 +1,12 @@
 # rextlib - Utils
 
-from typing import Self, TypeVar, TypedDict, Any
-from collections.abc import Iterator, Iterable, Sized
+from typing import Self, Generic, TypeVar, TypedDict, Any
+from collections.abc import Iterator, Iterable, Sized, Hashable
 
 from traceback import TracebackException
 
 from dataclasses import dataclass
+from time import time
 from re import sub
 
 from concurrent.futures import ThreadPoolExecutor
@@ -13,12 +14,72 @@ from asyncio import AbstractEventLoop, all_tasks
 
 from psutil import cpu_percent, virtual_memory
 
+from .cacher import CacherPool, Cacher
+
 
 __all__ = (
     "make_error_message", "make_simple_error_text", "code_block", "format_text",
     "map_length", "PerformanceStatistics", "take_performance_statistics",
-    "make_self_from_row", "camel_to_snake_case", "dict_camel_to_snake_case"
+    "make_self_from_row", "camel_to_snake_case", "dict_camel_to_snake_case",
+    "CooldownManager"
 )
+
+
+@dataclass
+class CooldownContext:
+    "クールダウンの情報を格納するためのクラスです。"
+
+    count: int
+    deadline: float
+CKeyT = TypeVar("CKeyT", bound=Hashable)
+class CooldownManager(Generic[CKeyT]):
+    "簡単にクールダウンを実装するのに使うクラスです。"
+
+    def __init__(
+        self, cacher: CacherPool,
+        min_ok_count: int = 1,
+        base_cooldown_time: float = 10.,
+        max_cooldown_count: int = 3
+    ) -> None:
+        self.min_ok_count = min_ok_count
+        self.base_cooldown_time = base_cooldown_time
+        self.max_cooldown_count = max_cooldown_count
+        self.cache: Cacher[CKeyT, CooldownContext] = cacher.acquire(
+            self.base_cooldown_time * self.max_cooldown_count,
+            auto_update_deadline=False
+        )
+
+    @property
+    def min_ok_count(self) -> int:
+        return self._min_ok_count
+
+    @min_ok_count.setter
+    def min_ok_count(self, value: int) -> None:
+        self._min_ok_count = value
+        self.__min_ok_count = 1 - value
+
+    def get_retry_after(self, key: CKeyT) -> float:
+        "何秒後に再挑戦すれば良いかを返します。"
+        return self.cache[key].deadline - time()
+
+    async def check(self, key: CKeyT) -> bool:
+        "指定されたキーがクールダウン中かどうかをチェックします。"
+        now = time()
+
+        if key not in self.cache:
+            self.cache[key] = CooldownContext(self.__min_ok_count, now)
+        is_ok = self.cache[key].deadline <= now
+
+        if is_ok and self.cache[key].count < self.max_cooldown_count:
+            self.cache[key].count += 1
+            self.cache[key].deadline = deadline = now + (
+                self.cache[key].count
+                if self.cache[key].count > 0
+                else 0
+            ) * self.base_cooldown_time
+            self.cache.update_deadline(key, deadline + deadline / 2)
+
+        return is_ok
 
 
 MsfrT = TypeVar("MsfrT")
