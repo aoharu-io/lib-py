@@ -62,7 +62,7 @@ class CooldownManager(Generic[CKeyT]):
         "何秒後に再挑戦すれば良いかを返します。"
         return self.cache[key].deadline - time()
 
-    async def check(self, key: CKeyT) -> bool:
+    def check(self, key: CKeyT) -> bool:
         "指定されたキーがクールダウン中かどうかをチェックします。"
         now = time()
 
