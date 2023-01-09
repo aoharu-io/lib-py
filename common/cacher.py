@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar, Any, overload
+from typing import Generic, TypeVar, Any, overload, cast
 from collections.abc import Iterator, Callable, Hashable
 
 from threading import Thread
@@ -181,6 +181,7 @@ class Cacher(Generic[KeyT, ValueT]):
         return str(self)
 
 
+TpcT = TypeVar("TpcT", bound=Cacher)
 class CacherPool(Thread):
     "Cacherのプールです。"
 
@@ -191,12 +192,12 @@ class CacherPool(Thread):
         super().__init__(*args, **kwargs)
 
     def acquire(
-        self, *args: Any, cls: type[Cacher]
+        self, *args: Any, cls: type[TpcT]
             = Cacher, **kwargs: Any
-    ) -> Cacher[Any, Any]:
+    ) -> TpcT:
         "Cacherを生み出します。"
         self.cachers.append(cls(*args, **kwargs))
-        return self.cachers[-1]
+        return cast(TpcT, self.cachers[-1])
 
     def release(self, cacher: Cacher[Any, Any]) -> None:
         "指定されたCacherを削除します。"
