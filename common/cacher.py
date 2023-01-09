@@ -191,11 +191,11 @@ class CacherPool(Thread):
         super().__init__(*args, **kwargs)
 
     def acquire(
-        self, lifetime: float | None = None, *args: Any,
-        cls: type[Cacher] = Cacher, **kwargs: Any
+        self, *args: Any, cls: type[Cacher]
+            = Cacher, **kwargs: Any
     ) -> Cacher[Any, Any]:
         "Cacherを生み出します。"
-        self.cachers.append(cls(lifetime, *args, **kwargs))
+        self.cachers.append(cls(*args, **kwargs))
         return self.cachers[-1]
 
     def release(self, cacher: Cacher[Any, Any]) -> None:
