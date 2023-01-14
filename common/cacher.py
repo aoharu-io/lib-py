@@ -51,7 +51,7 @@ class Cache(Generic[DataT]):
 
     def is_dead(self, time_: float | None = None) -> bool:
         "死んだキャッシュかどうかをチェックします。"
-        return self.deadline is None or (time_ or time()) > self.deadline
+        return self.deadline is not None and (time_ or time()) > self.deadline
 
     def __str__(self) -> str:
         return f"<Cache data={type(self.data)} deadline={self.deadline}>"
