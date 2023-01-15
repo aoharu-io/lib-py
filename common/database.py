@@ -40,7 +40,6 @@ class DatabaseManager:
     "データベースを簡単に処理するためのクラスです。"
 
     db: Pool
-    fetchstep = staticmethod(fetchstep)
 
     def __init_subclass__(cls) -> None:
         for key, value in list(cls.__dict__.items()):
