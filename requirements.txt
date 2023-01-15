@@ -1,5 +1,5 @@
-aiomysql
-cryptography
-orjson
-aiofiles
-psutil
+aiomysql==0.1.1
+cryptography==38.0.3
+orjson==3.8.3
+aiofiles==22.1.0
+psutil==5.9.4
