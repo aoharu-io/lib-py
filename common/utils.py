@@ -14,7 +14,7 @@ from asyncio import AbstractEventLoop, all_tasks
 
 from psutil import cpu_percent, virtual_memory
 
-from .cacher import CacherPool, Cacher
+from .cacher import Cacher, DictCache
 
 
 __all__ = (
@@ -36,7 +36,7 @@ class CooldownManager(Generic[CKeyT]):
     "簡単にクールダウンを実装するのに使うクラスです。"
 
     def __init__(
-        self, cacher: CacherPool,
+        self, cacher: Cacher,
         min_ok_count: int = 1,
         base_cooldown_time: float = 10.,
         max_cooldown_count: int = 3
@@ -44,9 +44,11 @@ class CooldownManager(Generic[CKeyT]):
         self.min_ok_count = min_ok_count
         self.base_cooldown_time = base_cooldown_time
         self.max_cooldown_count = max_cooldown_count
-        self.cache: Cacher[CKeyT, CooldownContext] = cacher.acquire(
-            self.base_cooldown_time * self.max_cooldown_count,
-            auto_update_deadline=False
+        self.cache = cacher.register(
+            DictCache[CKeyT, CooldownContext](
+                self.base_cooldown_time * self.max_cooldown_count,
+                auto_update_deadline=False
+            )
         )
 
     @property
@@ -63,7 +65,7 @@ class CooldownManager(Generic[CKeyT]):
         return self.cache[key].deadline - time()
 
     def check(self, key: CKeyT) -> bool:
-        "指定されたキーがクールダウン中かどうかをチェックします。"
+        "指定されたキーがクールダウンしていないかどうかをチェックします。"
         now = time()
 
         if key not in self.cache:
@@ -77,7 +79,7 @@ class CooldownManager(Generic[CKeyT]):
                 if self.cache[key].count > 0
                 else 0
             ) * self.base_cooldown_time
-            self.cache.update_deadline(key, deadline + deadline / 2)
+            self.cache.update_deadline(deadline + deadline / 2, key)
 
         return is_ok
 
