@@ -81,9 +81,11 @@ class Cache(ABC):
         if on_dead is not None:
             self.on_dead = on_dead
 
-    @abstractmethod
     def on_dead(self, *args: Any, **kwargs: Any) -> Any:
-        "データが死んだ時に呼ばれるべき関数です。"
+        """データが死ぬ時に呼ばれるべき関数です。
+        デフォルトの実装では、`.delete_bypass_on_dead`を呼び出します。
+        データ削除を実装する場合、この関数で削除するようにして、この関数の呼び出しで削除してください。"""
+        self.delete_bypass_on_dead(*args, **kwargs)
 
     @abstractmethod
     def update_deadline(

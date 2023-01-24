@@ -60,7 +60,7 @@ class DictCache(Cache, Generic[KeyT, ValueT], MutableMapping[KeyT, ValueT]):
         self.data: MutableMapping[KeyT, Container[ValueT]] = data_cls()
 
     def on_dead(self, key: KeyT, value: ValueT) -> Any:
-        pass
+        super().on_dead(key)
 
     def delete_bypass_on_dead(self, key: KeyT) -> None:
         del self.data[key]
@@ -102,7 +102,7 @@ class DictCache(Cache, Generic[KeyT, ValueT], MutableMapping[KeyT, ValueT]):
             self.data[key] = self.make_container(value)
 
     def __delitem__(self, key: KeyT) -> None:
-        self.on_dead(key, self.data.pop(key).body)
+        self.on_dead(key, self[key])
 
     def __iter__(self) -> KeysView[KeyT]:
         return self.keys()
@@ -169,16 +169,15 @@ class DictCache(Cache, Generic[KeyT, ValueT], MutableMapping[KeyT, ValueT]):
     ) -> ValueT | DCgT:
         if (value := self.get(key, default)) == default:
             return default # type: ignore
-        del self.data[key]
+        self.on_dead(key, self[key])
         return value # type: ignore
 
     def popitem(self) -> tuple[KeyT, ValueT]:
-        key, value = self.data.popitem()
-        return key, value.body
+        raise _TEDIOUS
 
     def clear(self) -> None:
         for key in self.keys():
-            del self[key]
+            self.on_dead(key, self[key])
 
     def update(self, *_: Any, **__: Any) -> None:
         raise _TEDIOUS

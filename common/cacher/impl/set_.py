@@ -22,7 +22,7 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
         self.data = set[Container[ValueT]]()
 
     def on_dead(self, value: ValueT) -> Any:
-        pass
+        super().on_dead(value)
 
     def delete_bypass_on_dead(self, value: ValueT) -> None:
         self._remove(value, False)
@@ -103,7 +103,6 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
     def remove(self, value: ValueT) -> None:
         for tentative in self.data:
             if tentative.body == value:
-                self.data.remove(tentative)
                 self.on_dead(tentative.body)
                 break
         else:
