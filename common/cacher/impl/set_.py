@@ -58,6 +58,7 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
         now = time()
         for cache in {cache for cache in self.data if cache.is_dead(now)}:
             self.remove(cache.body)
+        super().clean()
 
     def __contains__(self, value: ValueT) -> bool:
         return any(value == cache.body for cache in self.data)

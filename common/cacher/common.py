@@ -77,6 +77,7 @@ class Cache(ABC):
     ) -> None:
         self.lifetime, self.auto_update_deadline = lifetime, auto_update_deadline
         self.cleaned = CountableEvent(0, 2)
+        self.cleaned.set()
 
         if on_dead is not None:
             self.on_dead = on_dead

@@ -89,6 +89,7 @@ class DictCache(Cache, Generic[KeyT, ValueT], MutableMapping[KeyT, ValueT]):
         now = time()
         for key in {key for key in self.keys() if self.data[key].is_dead(now)}:
             del self[key]
+        super().clean()
 
     def __getitem__(self, key: KeyT) -> ValueT:
         self.update_deadline_for_core(key)
