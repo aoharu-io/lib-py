@@ -1,7 +1,7 @@
 # rextlib - Utils
 
 from typing import Self, Generic, TypeVar, TypedDict, Any
-from collections.abc import Iterator, Iterable, Sized, Hashable
+from collections.abc import Callable, Iterator, Iterable, Sized, Hashable
 
 from traceback import TracebackException
 
@@ -180,13 +180,16 @@ def camel_to_snake_case(key: str, support_upper_camel_case: bool = True) -> str:
     return value
 
 
-DcscT = TypeVar("DcscT")
 def dict_camel_to_snake_case(
-    data: dict[str, DcscT],
-    *args: Any, **kwargs: Any
-) -> dict[str, DcscT]:
+    data: dict[str, Any], *args: Any,
+    replace_values: dict[str, Callable[[Any], Any]] | None = None,
+    **kwargs: Any
+) -> dict[str, Any]:
     "渡された辞書のキーをキャメルケースからスネークケースにします。"
     return {
-        camel_to_snake_case(key, *args, **kwargs): value
+        camel_to_snake_case(key, *args, **kwargs):
+            replace_values[key](value) # type: ignore
+                if key in (replace_values or ())
+                else value
         for key, value in data.items()
     }
