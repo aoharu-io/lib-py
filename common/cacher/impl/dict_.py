@@ -52,7 +52,8 @@ class DictCache(Cache, Generic[KeyT, ValueT], MutableMapping[KeyT, ValueT]):
     def __init__(
         self, *args: Any,
         data_cls: Callable[
-            [], dict | defaultdict
+            [], dict[Any, Container[Any]]
+                | defaultdict[Any, Container[Any]]
         ] = dict,
         **kwargs: Any
     ) -> None:

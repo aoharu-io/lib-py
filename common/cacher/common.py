@@ -1,6 +1,6 @@
 "Rext Lib Cacher - Common"
 
-from typing import TypeVar, Generic, Any
+from typing import TypeVar, Self, Generic, Any
 from collections.abc import Callable
 
 from abc import ABC, abstractmethod
@@ -24,13 +24,15 @@ class Container(Generic[DataT]):
     def __init__(self, body: DataT, deadline: float | None = None):
         self.body, self.deadline = body, deadline
 
-    def set_deadline(self, deadline: float) -> None:
+    def set_deadline(self, deadline: float) -> Self:
         "寿命を上書きします。"
         self.deadline = deadline
+        return self
 
-    def update_deadline(self, seconds: float, now: float | None = None) -> None:
+    def update_deadline(self, seconds: float, now: float | None = None) -> Self:
         "寿命を更新します。(加算されます。)"
         self.deadline = (now or time()) + seconds
+        return self
 
     def is_dead(self, time_: float | None = None) -> bool:
         "死んだキャッシュかどうかをチェックします。"
@@ -94,7 +96,7 @@ class Cache(ABC):
         *args: Any, **kwargs: Any
     ) -> None:
         """期限を更新します。
-        引数`.seconds`は、実行時の時間に加算される秒数で、`None`の場合は`.lifetime`または`0.`が使われます。"""
+        引数`.seconds`は、実行時の時間に加算される秒数で、`None`の場合は`.lifetime`（もしそれも`None`なら`0.`）が使われます。"""
 
     @abstractmethod
     def update_deadline_for_core(self, *args: Any, **kwargs: Any) -> None:

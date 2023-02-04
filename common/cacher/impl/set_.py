@@ -110,6 +110,8 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
             raise KeyError("値が見つかりませんでした。")
 
     def add(self, value: ValueT) -> None:
+        if self.auto_update_deadline and value in self.data:
+            self.update_deadline(None, value)
         self.data.add(self.make_container(value))
 
     def __ior__(self, *_, **__): raise _TEDIOUS
