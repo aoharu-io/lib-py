@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TypeVar, Generic, Any, overload
+from typing import Self, TypeVar, Generic, Any, overload
 from collections.abc import Iterator, Hashable, KeysView, ValuesView, \
     ItemsView, MutableMapping, Callable
 
-from collections import defaultdict
 from time import time
 
 from ..common import Container, Cache, _TEDIOUS
@@ -46,19 +45,16 @@ class ItemsViewForDictCache(Generic[KeyT, ValueT], ItemsView[KeyT, ValueT]):
         return ((key, cache.body) for key, cache in self.original)
 
 Undefined, DCgT = type("Undefined", (), {}), TypeVar("DCgT")
-class DictCache(Cache, Generic[KeyT, ValueT], MutableMapping[KeyT, ValueT]):
+class DictCache(Cache, MutableMapping[KeyT, ValueT], Generic[KeyT, ValueT]):
     "辞書のように使える用に実装した`.Cache`のサブクラスです。"
 
     def __init__(
-        self, *args: Any,
-        data_cls: Callable[
-            [], dict[Any, Container[Any]]
-                | defaultdict[Any, Container[Any]]
-        ] = dict,
-        **kwargs: Any
+        self, *args: Any, data_cls: Callable[[Self],
+            MutableMapping[Any, Container[Any]]
+        ] = lambda _: dict(), **kwargs: Any
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.data: MutableMapping[KeyT, Container[ValueT]] = data_cls()
+        self.data: MutableMapping[KeyT, Container[ValueT]] = data_cls(self)
 
     def on_dead(self, key: KeyT, value: ValueT) -> Any:
         super().on_dead(key)
