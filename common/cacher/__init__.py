@@ -1,6 +1,8 @@
-# rextlib - Cacher, キャッシュ管理
+"rextlib - Cacher, キャッシュ管理"
 
 from __future__ import annotations
+
+__all__ = ("Container", "Cache", "DictCache", "MutableSetCache", "Cacher")
 
 from typing import TypeVar, Any
 
@@ -14,9 +16,6 @@ from time import sleep
 from .common import Container, Cache
 from .impl.dict_ import DictCache
 from .impl.set_ import MutableSetCache
-
-
-__all__ = ("Container", "Cache", "DictCache", "MutableSetCache", "Cacher")
 
 
 @dataclass

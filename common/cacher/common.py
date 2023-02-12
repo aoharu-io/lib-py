@@ -1,5 +1,7 @@
 "Rext Lib Cacher - Common"
 
+__all__ = ("Container", "CountableEvent", "Cache")
+
 from typing import TypeVar, Self, Generic, Any
 from collections.abc import Callable
 
@@ -9,9 +11,6 @@ from dataclasses import dataclass
 from asyncio import Event
 
 from time import time
-
-
-__all__ = ("Container", "CountableEvent", "Cache")
 
 
 _TEDIOUS = NotImplementedError("めんどいので、この関数は実装されていません。")

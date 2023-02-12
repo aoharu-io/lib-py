@@ -1,9 +1,8 @@
-# rextlib - Config
-
-from typing import TypedDict, NotRequired
-
+"rextlib - Config"
 
 __all__ = ("Database", "Databases")
+
+from typing import TypedDict, NotRequired
 
 
 class Database(TypedDict, total=False):

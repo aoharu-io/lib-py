@@ -1,13 +1,12 @@
-# rextlib - Chiper
+"rextlib - Chiper"
 
 from __future__ import annotations
+
+__all__ = ("ChiperManager",)
 
 from cryptography.fernet import Fernet
 
 from aiofiles import open as aioopen
-
-
-__all__ = ("ChiperManager",)
 
 
 class ChiperManager:

@@ -1,4 +1,11 @@
-# rextlib - Utils
+"rextlib - Utils"
+
+__all__ = (
+    "make_error_message", "make_simple_error_text", "code_block", "format_text",
+    "map_length", "PerformanceStatistics", "take_performance_statistics",
+    "make_self_from_row", "camel_to_snake_case", "dict_camel_to_snake_case",
+    "CooldownManager"
+)
 
 from typing import Self, Generic, TypeVar, TypedDict, Any
 from collections.abc import Callable, Iterator, Iterable, Sized, Hashable
@@ -15,14 +22,6 @@ from asyncio import AbstractEventLoop, all_tasks
 from psutil import cpu_percent, virtual_memory
 
 from .cacher import Cacher, DictCache
-
-
-__all__ = (
-    "make_error_message", "make_simple_error_text", "code_block", "format_text",
-    "map_length", "PerformanceStatistics", "take_performance_statistics",
-    "make_self_from_row", "camel_to_snake_case", "dict_camel_to_snake_case",
-    "CooldownManager"
-)
 
 
 @dataclass

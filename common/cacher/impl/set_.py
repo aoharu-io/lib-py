@@ -1,6 +1,8 @@
-"Rext Lib Cacher Impl - Set Cacher"
+"rextlib Cacher Impl - Set Cacher"
 
 from __future__ import annotations
+
+__all__ = ("MutableSetCache",)
 
 from typing import TypeVar, Generic, Any
 from collections.abc import Iterator, Hashable, MutableSet
@@ -8,9 +10,6 @@ from collections.abc import Iterator, Hashable, MutableSet
 from time import time
 
 from ..common import Container, Cache, _TEDIOUS
-
-
-__all__ = ("MutableSetCache",)
 
 
 ValueT = TypeVar("ValueT", bound=Hashable)

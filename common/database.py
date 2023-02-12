@@ -1,4 +1,6 @@
-# rextlib - Data Manager
+"rextlib - Data Manager"
+
+__all__ = ("DatabaseManager", "cursor", "fetchstep", "DatabasePools")
 
 from typing import TypeVar, Self, Any
 from collections.abc import AsyncIterator, Callable
@@ -15,7 +17,6 @@ from .config import Databases as DatabasesConfig
 
 
 filterwarnings('ignore', module=r"aiomysql")
-__all__ = ("DatabaseManager", "cursor", "fetchstep", "DatabasePools")
 cursor: Cursor
 cursor = None # type: ignore
 

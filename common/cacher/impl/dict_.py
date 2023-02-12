@@ -1,6 +1,8 @@
-"Rext Lib Cacher Impl - Dict Cacher"
+"rextlib Cacher Impl - Dict Cacher"
 
 from __future__ import annotations
+
+__all__ = ("DictCache", "ValuesViewForDictCache", "ItemsViewForDictCache")
 
 from typing import Self, TypeVar, Generic, Any, overload
 from collections.abc import Iterator, Hashable, KeysView, ValuesView, \
@@ -9,9 +11,6 @@ from collections.abc import Iterator, Hashable, KeysView, ValuesView, \
 from time import time
 
 from ..common import Container, Cache, _TEDIOUS
-
-
-__all__ = ("DictCache", "ValuesViewForDictCache", "ItemsViewForDictCache")
 
 
 KeyT, ValueT = TypeVar("KeyT", bound=Hashable), TypeVar("ValueT")

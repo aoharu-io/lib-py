@@ -1,4 +1,6 @@
-# rextlib - Log
+"rextlib - Log"
+
+__all__ = ("set_stream_handler", "set_handler", "set_output_handler")
 
 from typing import Any
 
@@ -7,9 +9,6 @@ import logging
 
 from os import mkdir
 from os.path import exists
-
-
-__all__ = ("set_stream_handler", "set_handler", "set_output_handler")
 
 
 BASE_FORMAT = "[%(name)s] [%(levelname)s] %(message)s"

@@ -1,9 +1,8 @@
-# rextlib - Reply Error
-
-from typing import Any
-
+"rextlib - Reply Error"
 
 __all__ = ("ReplyError", "BadRequest", "NotFound")
+
+from typing import Any
 
 
 class ReplyError(Exception):
