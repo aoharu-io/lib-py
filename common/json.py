@@ -1,7 +1,10 @@
-# rextlib - JSON
+"rextlib - JSON"
 
-from orjson import dumps as odumps, loads
+__all__ = ("loads", "dumps")
+
+from orjson import dumps as original_dumps, loads
 
 
-dumps = lambda content, *args, **kwargs: odumps(content, *args, **kwargs).decode()
+dumps = lambda content, *args, **kwargs: \
+    original_dumps(content, *args, **kwargs).decode()
 "`orjson.dumps`を文字列で返すようにしたものです。"
