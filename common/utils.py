@@ -1,5 +1,7 @@
 "rextlib - Utils"
 
+from __future__ import annotations
+
 __all__ = (
     "make_error_message", "make_simple_error_text", "code_block", "format_text",
     "map_length", "PerformanceStatistics", "take_performance_statistics",
@@ -7,7 +9,7 @@ __all__ = (
     "CooldownManager"
 )
 
-from typing import Self, Generic, TypeVar, TypedDict, Any
+from typing import Self, Generic, TypeVar, ParamSpec, TypedDict, Any
 from collections.abc import Callable, Iterator, Iterable, Sized, Hashable
 
 from traceback import TracebackException
@@ -17,7 +19,7 @@ from time import time
 from re import sub
 
 from concurrent.futures import ThreadPoolExecutor
-from asyncio import AbstractEventLoop, all_tasks
+from asyncio import AbstractEventLoop, all_tasks, get_running_loop
 
 from psutil import cpu_percent, virtual_memory
 
@@ -28,59 +30,42 @@ from .cacher import Cacher, DictCache
 class CooldownContext:
     "クールダウンの情報を格納するためのクラスです。"
 
-    count: int
-    deadline: float
+    count: int = 0
+    deadline: float = 0.
 CKeyT = TypeVar("CKeyT", bound=Hashable)
 class CooldownManager(Generic[CKeyT]):
     "簡単にクールダウンを実装するのに使うクラスです。"
 
     def __init__(
         self, cacher: Cacher,
-        min_ok_count: int = 1,
-        base_cooldown_time: float = 10.,
+        rate: int = 2, per: float = 2.,
         max_cooldown_count: int = 3
     ) -> None:
-        self.min_ok_count = min_ok_count
-        self.base_cooldown_time = base_cooldown_time
+        self.rate, self.per = rate, per
         self.max_cooldown_count = max_cooldown_count
         self.cache = cacher.register(
             DictCache[CKeyT, CooldownContext](
-                self.base_cooldown_time * self.max_cooldown_count,
+                self.per * self.max_cooldown_count,
                 auto_update_deadline=False
             )
         )
 
-    @property
-    def min_ok_count(self) -> int:
-        return self._min_ok_count
-
-    @min_ok_count.setter
-    def min_ok_count(self, value: int) -> None:
-        self._min_ok_count = value
-        self.__min_ok_count = 1 - value
-
     def get_retry_after(self, key: CKeyT) -> float:
-        "何秒後に再挑戦すれば良いかを返します。"
+        "何秒後にクールダウンが終わるかを返します。"
         return self.cache[key].deadline - time()
 
     def check(self, key: CKeyT) -> bool:
         "指定されたキーがクールダウンしていないかどうかをチェックします。"
-        now = time()
-
-        if key not in self.cache:
-            self.cache[key] = CooldownContext(self.__min_ok_count, now)
-        is_ok = self.cache[key].deadline <= now
-
-        if is_ok and self.cache[key].count < self.max_cooldown_count:
+        if key in self.cache:
             self.cache[key].count += 1
-            self.cache[key].deadline = deadline = now + (
-                self.cache[key].count
-                if self.cache[key].count > 0
-                else 0
-            ) * self.base_cooldown_time
-            self.cache.update_deadline(deadline + deadline / 2, key)
-
-        return is_ok
+            if self.cache[key].count % self.rate == 0:
+                if self.cache[key].count < self.max_cooldown_count:
+                    self.cache.update_deadline(self.per * self.cache[key].count, key)
+                return False
+        else:
+            self.cache[key] = CooldownContext()
+            self.cache.update_deadline(self.per, key)
+        return True
 
 
 MsfrT = TypeVar("MsfrT")
@@ -90,27 +75,63 @@ def make_self_from_row(dataclass: type[MsfrT], row: Iterable[Any]) -> MsfrT:
     return dataclass(**{key: arg for key, arg in zip(dataclass.__annotations__.keys(), row)})
 
 
+ArReT, ArP = TypeVar("ArReT"), ParamSpec("ArP")
+class AsyncFuncIO:
+    "同期関数をスレッドプールで非同期に対応させるのに使える関数です。"
+
+    def __init__(self, executor: ThreadPoolExecutor, loop: AbstractEventLoop | None = None) -> None:
+        self.executor, self.loop = executor, loop or get_running_loop()
+
+    async def run(
+        self, func: Callable[ArP, ArReT],
+        *args: ArP.args, **kwargs: ArP.kwargs
+    ) -> ArReT:
+        "同期関数を非同期に実行します。"
+        return await self.loop.run_in_executor(
+            self.executor, lambda: func(*args, **kwargs)
+        )
+
+    @classmethod
+    def from_executors(
+        cls, executors: Executors,
+        attr_name: str = "normal",
+        *args: Any, **kwargs: Any
+    ) -> Self:
+        "`.Executors`から作ります。"
+        return cls(getattr(executors, attr_name) *args, **kwargs)
+
+
 @dataclass
-class Executors:
+class Executors(AsyncFuncIO):
     "時間のかかるブロッキングする処理を別スレッドで簡単に行うのに使うExecutorを格納するためのクラスです。"
 
     normal: ThreadPoolExecutor
     "通常の処理を回す際はこちらを使用してください。Botのclose時にはfutureはキャンセルされます。"
-    clean: ThreadPoolExecutor
+    cleaning: ThreadPoolExecutor
     "お片付け系の実行しないということがない方が良いような処理はこちらでやってください。"
 
+    def __post_init__(self) -> None:
+        self.init_super = super().__init__
+
     @classmethod
-    def default(cls) -> Self:
+    def default(
+        cls, prefix: str = "",
+        normal_name: str = "normal_executor",
+        cleaning_name: str = "cleaning_executor"
+    ) -> Self:
         "このクラスのインスタンスを作ります。"
         return cls(*(
             ThreadPoolExecutor(i, thread_name_prefix=prefix)
-            for i, prefix in ((4, "RT.NormalExecutor"), (2, "RT.CleanExecutor"))
+            for i, prefix in (
+                (4, f"{prefix}{normal_name}"),
+                (2, f"{prefix}{cleaning_name}")
+            )
         ))
 
     def close(self) -> None:
         "Executorを閉じます。"
         self.normal.shutdown(False, cancel_futures=True)
-        self.clean.shutdown(True)
+        self.cleaning.shutdown(True)
 
 
 def make_error_message(error: BaseException) -> str:
