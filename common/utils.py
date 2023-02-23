@@ -9,7 +9,7 @@ __all__ = (
     "CooldownManager"
 )
 
-from typing import Self, Generic, TypeVar, ParamSpec, TypedDict, Any
+from typing import Self, Generic, TypeVar, ParamSpec, TypedDict, Any, cast
 from collections.abc import Callable, Iterator, Iterable, Sized, Hashable
 
 from traceback import TracebackException
@@ -26,12 +26,6 @@ from psutil import cpu_percent, virtual_memory
 from .cacher import Cacher, DictCache
 
 
-@dataclass
-class CooldownContext:
-    "クールダウンの情報を格納するためのクラスです。"
-
-    count: int = 0
-    deadline: float = 0.
 CKeyT = TypeVar("CKeyT", bound=Hashable)
 class CooldownManager(Generic[CKeyT]):
     "簡単にクールダウンを実装するのに使うクラスです。"
@@ -44,7 +38,7 @@ class CooldownManager(Generic[CKeyT]):
         self.rate, self.per = rate, per
         self.max_cooldown_count = max_cooldown_count
         self.cache = cacher.register(
-            DictCache[CKeyT, CooldownContext](
+            DictCache[CKeyT, int](
                 self.per * self.max_cooldown_count,
                 auto_update_deadline=False
             )
@@ -52,18 +46,18 @@ class CooldownManager(Generic[CKeyT]):
 
     def get_retry_after(self, key: CKeyT) -> float:
         "何秒後にクールダウンが終わるかを返します。"
-        return self.cache[key].deadline - time()
+        return cast(float, self.cache.data[key].deadline) - time()
 
     def check(self, key: CKeyT) -> bool:
         "指定されたキーがクールダウンしていないかどうかをチェックします。"
         if key in self.cache:
-            self.cache[key].count += 1
-            if self.cache[key].count % self.rate == 0:
-                if self.cache[key].count < self.max_cooldown_count:
-                    self.cache.update_deadline(self.per * self.cache[key].count, key)
+            self.cache[key] += 1
+            if self.cache[key] % self.rate == 0:
+                if self.cache[key] < self.max_cooldown_count:
+                    self.cache.update_deadline(self.per * self.cache[key], key)
                 return False
         else:
-            self.cache[key] = CooldownContext()
+            self.cache[key] = 0
             self.cache.update_deadline(self.per, key)
         return True
 
