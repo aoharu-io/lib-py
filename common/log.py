@@ -7,6 +7,8 @@ from typing import Any
 from logging.handlers import RotatingFileHandler
 import logging
 
+from pathlib import PurePath
+
 from os import mkdir
 from os.path import exists
 
@@ -16,15 +18,26 @@ NORMAL_FORMATTER = logging.Formatter(BASE_FORMAT)
 EXTENDED_FORMATTER = logging.Formatter(f"[%(asctime)s] {BASE_FORMAT}", "%Y-%m-%d %H:%M:%S")
 
 
-def set_output_handler(logger: logging.Logger, file_name: str = "main") -> None:
+def set_output_handler(
+    logger: logging.Logger,
+    file_path: str | PurePath = "main.log",
+    **kwargs: Any
+) -> None:
     "ファイル出力をロガーに設定します。"
-    if not exists("data/logs"):
-        mkdir("data/logs")
-    handler = RotatingFileHandler(
-        filename=f"data/logs/{file_name}", encoding='utf-8',
-        mode='w', maxBytes=32 * 1024 * 1024, backupCount=10
-    )
+    if isinstance(file_path, str):
+        file_path = PurePath(file_path)
+    if not exists(file_path.parent):
+        mkdir(file_path.parent)
+
+    kwargs.setdefault("filename", file_path)
+    kwargs.setdefault("encoding", "utf-8")
+    kwargs.setdefault("mode", "w")
+    kwargs.setdefault("maxBytes", 32 * 1024 * 1024)
+    kwargs.setdefault("backupCount", 10)
+
+    handler = RotatingFileHandler(**kwargs)
     handler.setFormatter(EXTENDED_FORMATTER)
+
     logger.addHandler(handler)
 
 
