@@ -1,4 +1,4 @@
-# rextlib Key
+"Rext Lib - Key Maker"
 
 from cryptography.fernet import Fernet
 
