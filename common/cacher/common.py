@@ -121,9 +121,12 @@ class Cache(ABC):
         "キャッシュのインスタンスの設定に合わせた期限を作成します。"
         return None if self.lifetime is None else time() + self.lifetime
 
-    def make_container(self, value: DataT) -> Container[DataT]:
+    def make_container(
+        self, value: DataT, deadline:
+            float | None = None
+    ) -> Container[DataT]:
         "キャッシュのコンテナを作ります。"
-        return Container(value, self.make_deadline())
+        return Container(value, deadline or self.make_deadline())
 
     def new_special_str(self, additional: str) -> str:
         """`Cache.__str__`の返す文字列の最後の`>`の左に空白と引数`additional`の値を入れます。
