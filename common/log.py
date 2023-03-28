@@ -52,9 +52,11 @@ def set_stream_handler(logger: logging.Logger) -> None:
 def set_handler(
     logger: logging.Logger,
     output_file: bool = True,
+    stream: bool = True,
     **output_kwargs: Any
 ) -> None:
-    "渡された`Logger`でログを標準出力に出力するようにします。オプションでファイル出力します。"
-    set_stream_handler(logger)
+    "渡された`Logger`でログを標準出力に出力するようにします。また、ファイル出力もします。"
+    if stream:
+        set_stream_handler(logger)
     if output_file:
         set_output_handler(logger, **output_kwargs)
