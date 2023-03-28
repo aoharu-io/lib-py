@@ -1,6 +1,6 @@
 "rextlib - Log"
 
-__all__ = ("set_stream_handler", "set_handler", "set_output_handler")
+__all__ = ("set_stream_handler", "set_handler", "set_file_handler")
 
 from typing import Any
 
@@ -18,7 +18,7 @@ NORMAL_FORMATTER = logging.Formatter(BASE_FORMAT)
 EXTENDED_FORMATTER = logging.Formatter(f"[%(asctime)s] {BASE_FORMAT}", "%Y-%m-%d %H:%M:%S")
 
 
-def set_output_handler(
+def set_file_handler(
     logger: logging.Logger,
     file_path: str | PurePath = "main.log",
     **kwargs: Any
@@ -59,4 +59,4 @@ def set_handler(
     if stream:
         set_stream_handler(logger)
     if output_file:
-        set_output_handler(logger, **output_kwargs)
+        set_file_handler(logger, **output_kwargs)
