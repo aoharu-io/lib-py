@@ -18,6 +18,7 @@ NORMAL_FORMATTER = logging.Formatter(BASE_FORMAT)
 EXTENDED_FORMATTER = logging.Formatter(f"[%(asctime)s] {BASE_FORMAT}", "%Y-%m-%d %H:%M:%S")
 
 
+_last_added_file_handler = None
 def set_file_handler(
     logger: logging.Logger,
     file_path: str | PurePath = "main.log",
@@ -38,7 +39,14 @@ def set_file_handler(
     handler = RotatingFileHandler(**kwargs)
     handler.setFormatter(EXTENDED_FORMATTER)
 
+    # 過去に追加したハンドラがあるのなら、それを削除する。
+    global _last_added_file_handler
+    if _last_added_file_handler is not None and \
+            _last_added_file_handler in logger.handlers:
+        logger.removeHandler(_last_added_file_handler)
+
     logger.addHandler(handler)
+    _last_added_file_handler = handler
 
 
 def set_stream_handler(logger: logging.Logger) -> None:
