@@ -116,7 +116,7 @@ class DictCache(Cache, MutableMapping[KeyT, ValueT], Generic[KeyT, ValueT]):
     def __len__(self) -> int:
         return len(self.data)
 
-    def items(self) -> ItemsViewForDictCache:
+    def items(self) -> ItemsViewForDictCache[KeyT, ValueT]:
         return ItemsViewForDictCache(self.data.items())
 
     @overload
