@@ -23,7 +23,7 @@ from asyncio import AbstractEventLoop, all_tasks, get_running_loop
 
 from psutil import cpu_percent, virtual_memory
 
-from .cacher import Cacher, DictCache
+from ..cacher import Cacher, DictCache
 
 
 CKeyT = TypeVar("CKeyT", bound=Hashable)
