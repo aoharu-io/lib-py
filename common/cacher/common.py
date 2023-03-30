@@ -81,13 +81,13 @@ class Cache(ABC):
         self.cleaned.set()
 
         if on_dead is not None:
-            self.on_dead = on_dead
+            self.don_dead = on_dead
+
 
     def on_dead(self, *args: Any, **kwargs: Any) -> Any:
-        """データが死ぬ時に呼ばれるべき関数です。
-        デフォルトの実装では、`.delete_bypass_on_dead`を呼び出します。
-        データ削除を実装する場合、この関数で削除するようにして、この関数の呼び出しで削除してください。"""
-        self.delete_bypass_on_dead(*args, **kwargs)
+        """キャッシュの寿命がつきた際に呼ばれる関数です。
+        デフォルトの実装では`.delete`を呼び出すだけです。"""
+        self.delete(*args, **kwargs)
 
     @abstractmethod
     def update_deadline(
@@ -114,8 +114,10 @@ class Cache(ABC):
         self.cleaned.clear()
 
     @abstractmethod
-    def delete_bypass_on_dead(self, *args: Any, **kwargs: Any) -> None:
-        "`.on_dead`を呼び出さないようにデータを消します。"
+    def delete(self, *args: Any, **kwargs: Any) -> None:
+        """データを消すのに使う関数です。
+        キャッシュのデータを消す際は、これが呼ばれるべきです。
+        例えば辞書で言うのなら`del data[key]`のようなときです。"""
 
     def make_deadline(self) -> float | None:
         "キャッシュのインスタンスの設定に合わせた期限を作成します。"

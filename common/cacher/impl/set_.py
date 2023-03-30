@@ -23,7 +23,7 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
     def on_dead(self, value: ValueT) -> Any:
         super().on_dead(value)
 
-    def delete_bypass_on_dead(self, value: ValueT) -> None:
+    def delete(self, value: ValueT) -> None:
         self._remove(value, False)
 
     def get_raw(self, value: ValueT) -> Container[ValueT]:
@@ -95,7 +95,7 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
             if tentative.body == value:
                 self.data.remove(tentative)
                 if call_on_dead:
-                    self.on_dead(tentative.body)
+                    self.delete(tentative.body)
                 break
         else:
             raise KeyError("値が見つかりませんでした。")
@@ -103,7 +103,7 @@ class MutableSetCache(Cache, Generic[ValueT], MutableSet[ValueT]):
     def remove(self, value: ValueT) -> None:
         for tentative in self.data:
             if tentative.body == value:
-                self.on_dead(tentative.body)
+                self.delete(tentative.body)
                 break
         else:
             raise KeyError("値が見つかりませんでした。")
