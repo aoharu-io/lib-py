@@ -55,7 +55,7 @@ class DictCache(Cache, MutableMapping[KeyT, ValueT], Generic[KeyT, ValueT]):
         super().__init__(*args, **kwargs)
         self.data: MutableMapping[KeyT, Container[ValueT]] = data_cls(self)
 
-    def on_dead(self, key: KeyT, value: ValueT) -> Any:
+    def on_dead(self, key: KeyT, _: ValueT) -> Any:
         super().on_dead(key)
 
     def delete(self, key: KeyT) -> None:
