@@ -35,7 +35,7 @@ class CooldownManager(Generic[CKeyT]):
         rate: int = 2, per: float = 2.,
         max_cooldown_count: int = 3
     ) -> None:
-        self.rate, self.per = rate, per
+        self.cacher, self.rate, self.per = cacher, rate, per
         self.max_cooldown_count = max_cooldown_count
         self.cache = cacher.register(
             DictCache[CKeyT, int](
@@ -60,6 +60,10 @@ class CooldownManager(Generic[CKeyT]):
             self.cache[key] = 0
             self.cache.update_deadline(self.per, key)
         return True
+
+    def close(self) -> None:
+        "お片付けをします。"
+        self.cacher.delete(self.cache)
 
 
 MsfrT = TypeVar("MsfrT")
