@@ -1,5 +1,3 @@
-"rextlib Cacher Impl - Set Cacher"
-
 from __future__ import annotations
 
 __all__ = ("MutableSetCache",)

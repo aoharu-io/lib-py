@@ -1,7 +1,3 @@
-"rextlib - Data Manager"
-
-__all__ = ("DatabaseManager", "cursor", "fetchstep", "DatabasePools")
-
 from typing import TypeVar, Self, Any
 from collections.abc import AsyncIterator, Callable
 

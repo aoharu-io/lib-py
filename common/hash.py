@@ -1,5 +1,3 @@
-"Rext Lib - File Hash"
-
 __all__ = ("get_hash", "get_file_hash")
 
 from hashlib import sha256

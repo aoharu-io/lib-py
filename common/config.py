@@ -1,5 +1,3 @@
-"rextlib - Config"
-
 __all__ = ("Database", "Databases")
 
 from typing import TypedDict, NotRequired

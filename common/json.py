@@ -1,5 +1,3 @@
-"rextlib - JSON"
-
 __all__ = ("loads", "dumps")
 
 from orjson import dumps as original_dumps, loads

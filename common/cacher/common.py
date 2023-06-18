@@ -1,5 +1,3 @@
-"Rext Lib Cacher - Common"
-
 __all__ = ("Container", "CountableEvent", "Cache")
 
 from typing import TypeVar, Self, Generic, Any

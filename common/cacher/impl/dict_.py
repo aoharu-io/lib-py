@@ -1,5 +1,3 @@
-"rextlib Cacher Impl - Dict Cacher"
-
 from __future__ import annotations
 
 __all__ = ("DictCache", "ValuesViewForDictCache", "ItemsViewForDictCache")

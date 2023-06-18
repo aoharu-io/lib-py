@@ -1,5 +1,3 @@
-"rextlib - Log"
-
 __all__ = (
     "set_stream_handler", "set_handler", "set_file_handler", "BASE_FORMAT",
     "NORMAL_FORMATTER", "EXTENDED_FORMATTER"

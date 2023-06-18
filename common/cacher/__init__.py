@@ -1,5 +1,3 @@
-"rextlib - Cacher, キャッシュ管理"
-
 from __future__ import annotations
 
 __all__ = ("Container", "Cache", "DictCache", "MutableSetCache", "Cacher")

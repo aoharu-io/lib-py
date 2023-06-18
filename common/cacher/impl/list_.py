@@ -1,5 +1,3 @@
-"Rext Lib Cacher Impl - List"
-
 from typing import TypeVar, Generic, Self, Any, overload
 from collections.abc import MutableSequence, Callable, Iterator
 

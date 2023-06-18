@@ -1,5 +1,3 @@
-"Rext Lib - Quick Two Log"
-
 __all__ = ("QuickTwoLog", "InfoCache")
 
 from dataclasses import dataclass

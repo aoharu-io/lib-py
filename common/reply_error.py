@@ -1,5 +1,3 @@
-"rextlib - Reply Error"
-
 __all__ = ("ReplyError", "BadRequest", "NotFound")
 
 from typing import Any
