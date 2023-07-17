@@ -1,6 +1,12 @@
 [project]
 name = "rextlib"
 version = "0.0.0"
+classifiers = [
+    "Private :: Do Not Upload",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+    "Framework :: AsyncIO"
+]
 dependencies = [
     "aiomysql~=0.2.0",
     "cryptography~=41.0.1",
