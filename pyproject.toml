@@ -11,7 +11,7 @@ dependencies = [
     "aiomysql~=0.2.0",
     "cryptography~=41.0.1",
     "orjson~=3.9.2",
-    "aiofiles~=23.1.0",
+    "aiofiles~=23.2.1",
     "psutil~=5.9.5",
 ]
 requires-python = ">= 3.11"
