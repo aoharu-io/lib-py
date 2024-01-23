@@ -9,7 +9,7 @@ classifiers = [
 ]
 dependencies = [
     "aiomysql~=0.2.0",
-    "cryptography~=41.0.1",
+    "cryptography~=42.0.0",
     "orjson~=3.9.2",
     "aiofiles~=23.2.1",
     "psutil~=5.9.5",
